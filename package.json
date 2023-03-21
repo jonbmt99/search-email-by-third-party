@@ -1,0 +1,19 @@
+{
+  "name": "search-email-by-third-party",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "axios": "^1.3.4"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "outscraper": "^2.0.1",
+    "xlsx": "^0.18.5"
+  }
+}
