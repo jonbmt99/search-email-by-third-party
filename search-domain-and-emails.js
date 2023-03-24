@@ -10,6 +10,7 @@ const Outscraper = require("outscraper");
 let client = new Outscraper(OUTSCRAPER_API_KEY);
 const fs = require("fs");
 const XLSX = require("xlsx");
+const input_row = parseInt(process.argv.splice(2).join(" "), 10);
 
 const headers = {
   headers: {
@@ -38,8 +39,10 @@ function getDomain(url, subdomain) {
 
 async function main() {
   console.log("total row: ", rows.length);
-  for (let i = 0; i < rows.length; i++) {
+  let i = input_row ? input_row - 1 : 0;
+  while (i < rows.length) {
     console.log("current_row: ", i + 1);
+    i++;
     let row = rows[i];
     const question = `Website of company ${row["CITY-VILLE"]} in ${row["COMPANY-ENTREPRISE"]}`;
     const body = {
@@ -96,6 +99,7 @@ async function main() {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "data");
       XLSX.writeFile(workbook, `./data-output-excel/${output_file_name.replace('.json', '')}.xlsx`);
+      fs.writeFileSync(`./current-row/current-row-of-${input_file_name}`, `index row done: ${i}`);
     } catch (e) {
       console.log("error: ", e);
     }
