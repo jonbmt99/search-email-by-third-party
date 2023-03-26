@@ -1,5 +1,7 @@
 require('dotenv').config();
 const axios = require("axios");
+const querystring = require('querystring');
+const { toArray, removeEmpty } = require('./utils');
 const SERPER_API_KEY = process.env['SERPER_API_KEY'];
 const OUTSCRAPER_API_KEY = process.env['OUTSCRAPER_API_KEY'];
 const input_file_name = process.env['INPUT_FILE_NAME'];
@@ -42,8 +44,8 @@ async function main() {
   let i = input_row ? input_row - 1 : 0;
   while (i < rows.length) {
     console.log("current_row: ", i + 1);
-    i++;
     let row = rows[i];
+    i++;
     const question = `Website of company ${row["CITY-VILLE"]} in ${row["COMPANY-ENTREPRISE"]}`;
     const body = {
       q: question,
@@ -66,9 +68,9 @@ async function main() {
       const domain_query = row.domain;
       if (!domain_query.includes("not found")) {
         try {
-          let response = await client.emailsAndContacts([domain_query]);
-          if (response && response[0] && response[0].emails) {
-            const emails = response[0].emails;
+          let response = await emailByOutScrapper(domain_query);
+          if (response && response.data && response.data[0] && response.data[0].emails) {
+            const emails = response.data[0].emails;
             row.emails = "";
             row.full_name = "";
             row.title = "";
@@ -82,8 +84,9 @@ async function main() {
         } catch (e) {
           console.log("error: ", e);
         }
-      } else {
-        row.emails = "not found";
+      }
+      if (!row.emails) {
+        row.emails = 'not found';
       }
       let current_output = fs.readFileSync(`./data-output/${output_file_name}`);
           current_output = JSON.parse(current_output);
@@ -103,6 +106,30 @@ async function main() {
     } catch (e) {
       console.log("error: ", e);
     }
+  }
+}
+
+async function emailByOutScrapper(query) {
+  const apiHostname = 'https://api.app.outscraper.com';
+  const parameters = {
+    query: toArray(query),
+    async: false,
+  }
+  let path = `/emails-and-contacts?${querystring.stringify(removeEmpty(parameters))}`;
+  const url = apiHostname + path;
+  let config = {
+    method: 'get',
+    url: url,
+    headers: { 
+      'X-API-KEY': OUTSCRAPER_API_KEY
+    }
+  };
+  try {
+    const response = await axios.request(config);
+    return response.data
+  } catch (e) {
+    console.log('error in outscrapper: ', e);
+    return null;
   }
 }
 
